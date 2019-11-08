@@ -18,6 +18,21 @@ const makerPage = (req, res) => {
   });
 };
 
+const clearAll = (req, res) => {
+  Domo.DomoModel.deleteByOwner(req.session.account._id, (err) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json({
+        error: 'An error occurred',
+      });
+    }
+
+    return res.json({
+      message:"Success",
+    });
+  });
+}
+
 const makeDomo = (req, res) => {
   if (!req.body.name || !req.body.age || !req.body.lives) {
     return res.status(400).json({
@@ -74,6 +89,8 @@ const getDomos = (request, response) => {
   });
 };
 
+
 module.exports.makerPage = makerPage;
 module.exports.getDomos = getDomos;
 module.exports.make = makeDomo;
+module.exports.clearAll = clearAll;

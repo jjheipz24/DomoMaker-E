@@ -11,7 +11,8 @@ var handleDomo = function handleDomo(e) {
     }
 
     sendAjax('POST', $('#domoForm').attr("action"), $("#domoForm").serialize(), function () {
-        loadDomosFromServer();
+        console.log($('#domoCsrf').val());
+        loadDomosFromServer($('#domoCsrf').val());
     });
 
     return false;
@@ -43,12 +44,13 @@ var DomoForm = function DomoForm(props) {
             'Lives: '
         ),
         React.createElement('input', { id: 'domoLives', type: 'text', name: 'lives', placeholder: 'Domo Lives' }),
-        React.createElement('input', { type: 'hidden', name: '_csrf', value: props.csrf }),
+        React.createElement('input', { id: 'domoCsrf', type: 'hidden', name: '_csrf', value: props.csrf }),
         React.createElement('input', { className: 'makeDomoSubmit', type: 'submit', value: 'Make Domo' })
     );
 };
 
 var DomoList = function DomoList(props) {
+    console.log(props);
     if (props.domos.length === 0) {
         return React.createElement(
             'div',
@@ -86,26 +88,50 @@ var DomoList = function DomoList(props) {
             )
         );
     });
-
+    console.log("hi");
+    console.log(props);
     return React.createElement(
         'div',
         { className: 'domoList' },
-        domoNodes
+        domoNodes,
+        React.createElement(
+            'form',
+            { id: 'deleteForm',
+                onSubmit: handleDelete,
+                action: '/cleared',
+                method: 'DELETE'
+            },
+            React.createElement('input', { id: 'deleteCsrf', type: 'hidden', name: '_csrf', value: props.csrf }),
+            React.createElement('input', { className: 'makeDomoSubmit', type: 'submit', value: 'Clear All' })
+        )
     );
 };
 
-var loadDomosFromServer = function loadDomosFromServer() {
+var handleDelete = function handleDelete(e) {
+    e.preventDefault();
+
+    $("#domoMessage").animate({ width: 'hide' }, 350);
+    console.log($('#deleteCsrf').val());
+    sendAjax('DELETE', $('#deleteForm').attr("action"), $("#deleteForm").serialize(), function () {
+
+        loadDomosFromServer($('#deleteCsrf').val());
+    });
+
+    return false;
+};
+
+var loadDomosFromServer = function loadDomosFromServer(csrf) {
     sendAjax('GET', '/getDomos', null, function (data) {
-        ReactDOM.render(React.createElement(DomoList, { domos: data.domos }), document.querySelector("#domos"));
+        ReactDOM.render(React.createElement(DomoList, { csrf: csrf, domos: data.domos }), document.querySelector("#domos"));
     });
 };
 
 var setup = function setup(csrf) {
     ReactDOM.render(React.createElement(DomoForm, { csrf: csrf }), document.querySelector('#makeDomo'));
 
-    ReactDOM.render(React.createElement(DomoList, { domos: [] }), document.querySelector('#domos'));
+    ReactDOM.render(React.createElement(DomoList, { csrf: csrf, domos: [] }), document.querySelector('#domos'));
 
-    loadDomosFromServer();
+    loadDomosFromServer(csrf);
 };
 
 var getToken = function getToken() {
